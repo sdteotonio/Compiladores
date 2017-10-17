@@ -7,8 +7,14 @@ package view;
 
 import com.sun.javafx.css.StyleManager;
 import java.awt.Color;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import javax.swing.JTextPane;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.DefaultStyledDocument;
@@ -24,13 +30,142 @@ public class Principal extends javax.swing.JFrame {
 
     /**
      * Creates new form Principal
-     */
-   
+     */ 
+   public static HashMap<String,String> TOKENS = new HashMap<>();
+   public ArrayList<String> encontradas = new ArrayList<>();
+   public static String[] PALAVRAS_RESERVADAS = {
+    "abstract",
+    "add",
+    "alias",
+    "as",
+    "ascending",
+    "base",
+    "bool",
+    "break",
+    "byte",
+    "case",
+    "catch",
+    "char",
+    "checked",
+    "class",
+    "const",
+    "continue",
+    "decimal",
+    "default",
+    "delegate",
+    "descending",
+    "do",
+    "double",
+    "dynamic",
+    "else",
+    "enum",
+    "event",
+    "exception",
+    "explicit",
+    "extern",
+    "false",
+    "finally",
+    "fixed",
+    "float",
+    "for",
+    "foreach",
+    "from",
+    "get",
+    "global",
+    "goto",
+    "group",
+    "if",
+    "implicit",
+    "in",
+    "int",
+    "interface",
+    "internal",
+    "into",
+    "is",
+    "join",
+    "let",
+    "lock",
+    "long",
+    "namespace",
+    "new",
+    "null",
+    "object",
+    "operator",
+    "orderby",
+    "out",
+    "override",
+    "params",
+    "partial",
+    "private",
+    "protected",
+    "public",
+    "readonly",
+    "ref",
+    "remove",
+    "return",    
+    "sbyte",
+    "sealed",
+    "select",
+    "set",
+    "short",
+    "sizeof",
+    "stackalloc",
+    "static",
+    "string",
+    "struct",
+    "switch",
+    "this",
+    "throw",
+    "true",
+    "try",
+    "typeof",
+    "uint",
+    "ulong",
+    "unchecked",
+    "unsafe",
+    "ushort",
+    "using",
+    "value",
+    "var",
+    "virtual",
+    "void",
+    "volatile",
+    "where",
+    "while",
+    "yield"
+};
+    
     public Principal() {
         initComponents();
-     
+        inicializarTokens();
     }
+    public void inicializarTokens(){
+        TOKENS.put("ATRIB","\\=");
+        TOKENS.put("CTE","\\d\\;*");
+        TOKENS.put("PVIR","\\s*\\w*\\;\\n");
+        TOKENS.put("ACHA","\\w*\\s*\\{\\s");
+        TOKENS.put("FCHA","\\s*\\}\\s*");
+        TOKENS.put("ID","\\s*\\D\\w{1,}\\d*\\s*");
+    }
+    public void verificaPalavra(String palavra) {
+        for (Map.Entry<String, String> entry : TOKENS.entrySet()) {
+            String key = entry.getKey();
+            String value = entry.getValue();
+            for(String reservada : PALAVRAS_RESERVADAS){
+                    if(palavra.equals(reservada)){
+                        String saida = reservada.toUpperCase() +  ":" + palavra;
+                        encontradas.add(saida);
+                        return;
+                    }
+                }
+            if(palavra.matches(value)){
+                String saida = key +  ":" + palavra;
+                encontradas.add(saida);
+            }
+        }
 
+    }
+ 
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -62,24 +197,19 @@ public class Principal extends javax.swing.JFrame {
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel1Layout.createSequentialGroup()
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(bt_analise)
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addComponent(bt_analise, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addContainerGap())
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel1Layout.createSequentialGroup()
-                .addContainerGap()
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
+                .addContainerGap(12, Short.MAX_VALUE)
                 .addComponent(bt_analise)
-                .addContainerGap(12, Short.MAX_VALUE))
+                .addContainerGap())
         );
 
-        textPlace.addKeyListener(new java.awt.event.KeyAdapter() {
-            public void keyPressed(java.awt.event.KeyEvent evt) {
-                textPlaceKeyPressed(evt);
-            }
-        });
         jScrollPane2.setViewportView(textPlace);
 
         javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
@@ -108,7 +238,7 @@ public class Principal extends javax.swing.JFrame {
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel3Layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jLabel1, javax.swing.GroupLayout.DEFAULT_SIZE, 538, Short.MAX_VALUE)
+                .addComponent(jLabel1, javax.swing.GroupLayout.DEFAULT_SIZE, 566, Short.MAX_VALUE)
                 .addContainerGap())
         );
         jPanel3Layout.setVerticalGroup(
@@ -148,14 +278,18 @@ public class Principal extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void bt_analiseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_bt_analiseActionPerformed
-        
+        check();
     }//GEN-LAST:event_bt_analiseActionPerformed
 
-    private void textPlaceKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_textPlaceKeyPressed
-        // TODO add your handling code here:
- 
-    }//GEN-LAST:event_textPlaceKeyPressed
-
+    private void check(){
+        encontradas = new ArrayList<>();
+        for(String atual : textPlace.getText().split("\n")){
+            for(String palavra : atual.split(" ")){
+                verificaPalavra(palavra);
+            }
+        }
+        new AnaliseLexicaTabela(encontradas).setVisible(true);
+    }
     /**
      * @param args the command line arguments
      */
