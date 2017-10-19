@@ -5,35 +5,27 @@
  */
 package view;
 
-import com.sun.javafx.css.StyleManager;
-import java.awt.Color;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import javax.swing.JTextPane;
-import javax.swing.text.BadLocationException;
-import javax.swing.text.DefaultStyledDocument;
-import javax.swing.text.Style;
-import javax.swing.text.StyleConstants;
-import javax.swing.text.StyleContext;
+import javax.swing.JTextArea;
 
 /**
  *
  * @author sergi
  */
-public class Principal extends javax.swing.JFrame {
+public class ExibirCodigo extends javax.swing.JFrame {
 
     /**
-     * Creates new form Principal
-     */ 
-   public static HashMap<String,String> TOKENS = new HashMap<>();
+     * Creates new form ExibirCodigo
+     */
+     public HashMap<String,String[]> TOKENS = new HashMap<>();
    public ArrayList<String> encontradas = new ArrayList<>();
-   public static String[] PALAVRAS_RESERVADAS = {
+   public String[] PALAVRAS_RESERVADAS = {
     "abstract",
     "add",
     "alias",
@@ -134,23 +126,31 @@ public class Principal extends javax.swing.JFrame {
     "while",
     "yield"
 };
-    
-    public Principal() {
+   private String mFilePath;
+    private ExibirCodigo() {
         initComponents();
         inicializarTokens();
     }
-    public void inicializarTokens(){
-        TOKENS.put("ATRIB","\\=");
-        TOKENS.put("CTE","\\d\\;*");
-        TOKENS.put("PVIR","\\s*\\w*\\;\\n");
-        TOKENS.put("ACHA","\\w*\\s*\\{\\s");
-        TOKENS.put("FCHA","\\s*\\}\\s*");
-        TOKENS.put("ID","\\s*\\D\\w{1,}\\d*\\s*");
+    public ExibirCodigo(String filePath){
+        this();
+        this.mFilePath = filePath;
+        carregarFile();
+    }
+public void inicializarTokens(){
+        //TOKENS.put("TOKEN",new String[]{EXPRESSAO,ATOMO});
+        TOKENS.put("ATRIB",new String[]{"\\w*\\s*\\=\\s*\\w*","="});
+        TOKENS.put("CTE",new String[]{"\\d\\;*\\s*"});
+        TOKENS.put("PVIR",new String[]{"\\s*\\w*\\s*\\;\\s*\\n*",";"});
+        TOKENS.put("ACHA",new String[]{"\\w*\\s*\\{\\s"});
+        TOKENS.put("FCHA",new String[]{"\\s*\\}\\s*"});
+        TOKENS.put("ID",new String[]{"\\s*\\D\\w{1,}(\\(\\))*\\d*\\s*"});
+       
     }
     public void verificaPalavra(String palavra) {
-        for (Map.Entry<String, String> entry : TOKENS.entrySet()) {
+        for (Map.Entry<String, String[]> entry : TOKENS.entrySet()) {
             String key = entry.getKey();
-            String value = entry.getValue();
+            String[] valor = entry.getValue();
+            String express = valor[0];
             for(String reservada : PALAVRAS_RESERVADAS){
                     if(palavra.equals(reservada)){
                         String saida = reservada.toUpperCase() +  ":" + palavra;
@@ -158,14 +158,38 @@ public class Principal extends javax.swing.JFrame {
                         return;
                     }
                 }
-            if(palavra.matches(value)){
-                String saida = key +  ":" + palavra;
+            if(palavra.matches(express)){
+                String atomo = tratamento(key,palavra);
+                String saida = key +  ":" + atomo;
                 encontradas.add(saida);
             }
         }
-
+    }
+    private String tratamento(String key, String palavra) {
+        try{
+            if(key.equals("CTE")){
+                palavra = palavra.replaceAll("[;]+"," ");
+                System.out.println(palavra);
+            }
+            String atomo = TOKENS.get(key)[1];
+            return atomo;
+        }catch(Exception e){
+            return palavra;
+        }
     }
  
+    private void carregarFile(){
+        try (BufferedReader br = new BufferedReader(new FileReader(mFilePath))) {
+			String sCurrentLine;
+			while ((sCurrentLine = br.readLine()) != null) {
+				
+                                textPlace.append(sCurrentLine+"\n");
+			}
+
+		} catch (IOException e) {
+			e.printStackTrace();
+	}
+    }
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -178,13 +202,12 @@ public class Principal extends javax.swing.JFrame {
         jPanel1 = new javax.swing.JPanel();
         bt_analise = new javax.swing.JButton();
         jPanel2 = new javax.swing.JPanel();
-        jScrollPane2 = new javax.swing.JScrollPane();
-        textPlace = new javax.swing.JTextPane();
+        jScrollPane1 = new javax.swing.JScrollPane();
+        textPlace = new javax.swing.JTextArea();
         jPanel3 = new javax.swing.JPanel();
         jLabel1 = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setResizable(false);
 
         bt_analise.setText("Análise Léxica");
         bt_analise.addActionListener(new java.awt.event.ActionListener() {
@@ -210,7 +233,9 @@ public class Principal extends javax.swing.JFrame {
                 .addContainerGap())
         );
 
-        jScrollPane2.setViewportView(textPlace);
+        textPlace.setColumns(20);
+        textPlace.setRows(5);
+        jScrollPane1.setViewportView(textPlace);
 
         javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
         jPanel2.setLayout(jPanel2Layout);
@@ -218,19 +243,19 @@ public class Principal extends javax.swing.JFrame {
             jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel2Layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jScrollPane2)
+                .addComponent(jScrollPane1)
                 .addContainerGap())
         );
         jPanel2Layout.setVerticalGroup(
             jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel2Layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 234, Short.MAX_VALUE)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 349, Short.MAX_VALUE)
                 .addContainerGap())
         );
 
         jLabel1.setFont(new java.awt.Font("Tahoma", 0, 24)); // NOI18N
-        jLabel1.setText("C# Encoder");
+        jLabel1.setText("Código");
 
         javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
         jPanel3.setLayout(jPanel3Layout);
@@ -238,7 +263,7 @@ public class Principal extends javax.swing.JFrame {
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel3Layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jLabel1, javax.swing.GroupLayout.DEFAULT_SIZE, 566, Short.MAX_VALUE)
+                .addComponent(jLabel1, javax.swing.GroupLayout.DEFAULT_SIZE, 765, Short.MAX_VALUE)
                 .addContainerGap())
         );
         jPanel3Layout.setVerticalGroup(
@@ -266,8 +291,8 @@ public class Principal extends javax.swing.JFrame {
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                 .addContainerGap()
                 .addComponent(jPanel3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jPanel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap())
@@ -278,11 +303,12 @@ public class Principal extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void bt_analiseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_bt_analiseActionPerformed
+        // TODO add your handling code here:
+        encontradas = new ArrayList<>();
         check();
     }//GEN-LAST:event_bt_analiseActionPerformed
-
     private void check(){
-        encontradas = new ArrayList<>();
+        
         for(String atual : textPlace.getText().split("\n")){
             for(String palavra : atual.split(" ")){
                 verificaPalavra(palavra);
@@ -307,20 +333,20 @@ public class Principal extends javax.swing.JFrame {
                 }
             }
         } catch (ClassNotFoundException ex) {
-            java.util.logging.Logger.getLogger(Principal.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(ExibirCodigo.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         } catch (InstantiationException ex) {
-            java.util.logging.Logger.getLogger(Principal.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(ExibirCodigo.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         } catch (IllegalAccessException ex) {
-            java.util.logging.Logger.getLogger(Principal.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(ExibirCodigo.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         } catch (javax.swing.UnsupportedLookAndFeelException ex) {
-            java.util.logging.Logger.getLogger(Principal.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(ExibirCodigo.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
         //</editor-fold>
 
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
-                new Principal().setVisible(true);
+                new ExibirCodigo().setVisible(true);
             }
         });
     }
@@ -331,7 +357,7 @@ public class Principal extends javax.swing.JFrame {
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JPanel jPanel3;
-    private javax.swing.JScrollPane jScrollPane2;
-    private javax.swing.JTextPane textPlace;
+    private javax.swing.JScrollPane jScrollPane1;
+    private javax.swing.JTextArea textPlace;
     // End of variables declaration//GEN-END:variables
 }
